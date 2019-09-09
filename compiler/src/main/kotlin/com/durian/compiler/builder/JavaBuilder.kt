@@ -139,6 +139,31 @@ class JavaBuilder {
             builder.addMethod(startMethod.build())
 
             /*
+             * 生成 start 方法，带动画
+             */
+            val startWithAnimMethod = MethodSpec.methodBuilder("start")
+                .addModifiers(Modifier.PUBLIC)
+                .addParameter(createNullableParam(Java.CONTEXT, "context"))
+                .addParameter(TypeName.INT, "enter")
+                .addParameter(TypeName.INT, "exit")
+                .addStatement("if(context == null) return")
+                .addStatement(
+                    "\$T intent = new \$T(context, \$T.class)",
+                    Java.INTENT,
+                    Java.INTENT,
+                    annotatedTypeName
+                )
+            addIntentStatement(startWithAnimMethod, classInfo.fields)
+            startWithAnimMethod.beginControlFlow("if (!(context instanceof \$T))", Java.ACTIVITY)
+                .addStatement("intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)")
+                .endControlFlow()
+                .addStatement("context.startActivity(intent)")
+                .beginControlFlow("if (context instanceof \$T)", Java.ACTIVITY)
+                .addStatement("((Activity) context).overridePendingTransition(enter, exit)")
+                .endControlFlow()
+            builder.addMethod(startWithAnimMethod.build())
+
+            /*
              * 生成 start for result 方法
              */
             val hostName = "objectHost"

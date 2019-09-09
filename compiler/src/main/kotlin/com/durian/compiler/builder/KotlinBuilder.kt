@@ -39,6 +39,19 @@ class KotlinBuilder {
             addKotlinParams(startMethod, classInfo.required, classInfo.optional, classInfo.fields)
             startMethod.addStatement("startActivity(intent)")
             fileBuilder.addFunction(startMethod.build())
+            //创建start方法带动画
+            val startWithAnimMethod = FunSpec.builder("start${classInfo.simpleName}")
+                .receiver(Kotlin.ACTIVITY)
+                .addModifiers(KModifier.PUBLIC)
+                .addStatement("val intent = %T(this, %T::class.java)", Kotlin.INTENT, classInfo.typeElement)
+                .returns(UNIT)
+            addKotlinParams(startWithAnimMethod, classInfo.required, classInfo.optional, classInfo.fields)
+            startWithAnimMethod.addParameter(ParameterSpec.builder("enter", INT).defaultValue("0").build())
+                .addParameter(ParameterSpec.builder("exit", INT).defaultValue("0").build())
+            startWithAnimMethod.addStatement("startActivity(intent)")
+                .addStatement("overridePendingTransition(enter, exit)")
+            fileBuilder.addFunction(startWithAnimMethod.build())
+
             // 创建Activity.start创建ActivityForResult方法
             val startForResultMethod = FunSpec.builder("start${classInfo.simpleName}ForResult")
                 .receiver(Kotlin.ACTIVITY)
